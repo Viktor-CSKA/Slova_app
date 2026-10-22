@@ -1,0 +1,12 @@
+Файл words.txt — список русских существительных, полученный из nouns.csv
+проекта https://github.com/Badestrand/russian-dictionary
+(данные OpenRussian и Wiktionary, поправки сообщества OpenRussian).
+
+Лицензия данных: Creative Commons Attribution-ShareAlike 4.0 International
+(текст лицензии: LICENSE-CC-BY-SA-4.0.txt, https://creativecommons.org/licenses/by-sa/4.0/).
+
+Изменения: взят только первый столбец («bare»), оставлены слова из букв а-я
+длиной от 3 до 8 символов, буква «ё» заменена на «е», повторы удалены, порядок
+источника (частотность) сохранён. Скрипт: tools/build-dict.mjs (стоп-лист имён и аббревиатур: tools/stoplist.txt).
+
+Список words.txt распространяется на тех же условиях (CC BY-SA 4.0).

@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>Слова из слова</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="/sdk.js"></script>
+</head>
+<body>
+  <div id="app">
+    <header class="top">
+      <div class="top__level" id="levelLabel">Уровень 1</div>
+      <div class="top__progress" id="progressLabel">0 / 0</div>
+    </header>
+
+    <main class="board">
+      <div class="found" id="found" aria-live="polite"></div>
+      <div class="current" id="current" aria-live="polite"></div>
+      <div class="toast" id="toast" role="status"></div>
+    </main>
+
+    <section class="play">
+      <div class="wheel" id="wheel">
+        <svg class="wheel__trail" viewBox="0 0 100 100" aria-hidden="true">
+          <polyline id="trail" points="" />
+        </svg>
+      </div>
+      <div class="actions">
+        <button class="btn btn--round" id="shuffleBtn" type="button" aria-label="Перемешать буквы">⟳</button>
+        <button class="btn btn--primary" id="enterBtn" type="button">Ввод</button>
+        <button class="btn btn--round" id="eraseBtn" type="button" aria-label="Стереть букву">⌫</button>
+        <button class="btn btn--hint" id="hintBtn" type="button">
+          <span id="hintMain">Подсказка</span>
+          <small id="hintSub"></small>
+        </button>
+      </div>
+    </section>
+
+    <div class="modal" id="modal" hidden>
+      <div class="modal__card">
+        <h2 id="modalTitle">Уровень пройден!</h2>
+        <p id="modalText"></p>
+        <button class="btn btn--primary" id="nextBtn" type="button">Дальше</button>
+        <p class="credits">Словарь: github.com/Badestrand/russian-dictionary (OpenRussian, Wiktionary), лицензия CC BY-SA 4.0. Список сокращён и приведён к строчным буквам без «ё».</p>
+      </div>
+    </div>
+
+    <div class="modal" id="loading">
+      <div class="modal__card"><p id="loadingText">Загрузка…</p></div>
+    </div>
+  </div>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
