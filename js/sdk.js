@@ -2,6 +2,7 @@
 // реклама «показывается» как простое окно, чтобы игру можно было пройти целиком.
 
 let ysdk = null;
+let player = null;
 const pauseListeners = { pause: () => {}, resume: () => {} };
 
 export function onPauseResume(pause, resume) {
@@ -25,6 +26,35 @@ export async function initSdk() {
     ysdk = null;
     return false;
   }
+}
+
+/** Текущее время в мс: у Яндекса серверное (игрок не сдвинет часы), вне Яндекса местное. */
+export function now() {
+  return ysdk?.serverTime?.() ?? Date.now();
+}
+
+const withTimeout = (promise, ms) =>
+  Promise.race([promise, new Promise((resolve) => setTimeout(() => resolve(null), ms))]);
+
+/** Сохранение из облака Яндекса или null (нет SDK, нет сети, не вышло за ms). */
+export async function loadCloudSave(ms = 2500) {
+  if (!ysdk) return null;
+  try {
+    player = await withTimeout(ysdk.getPlayer({ scopes: false }), ms);
+    if (!player) return null;
+    const data = await withTimeout(player.getData(['save']), ms);
+    return data?.save ?? null;
+  } catch (error) {
+    console.warn('Облачное сохранение недоступно', error);
+    player = null;
+    return null;
+  }
+}
+
+/** Записывает сохранение в облако (flush — сразу, а не отложенно). */
+export function writeCloudSave(save, flush = false) {
+  if (!player) return;
+  player.setData({ save }, flush).catch((error) => console.warn('Не записалось в облако', error));
 }
 
 /** Игрок может начать играть (обязательно по требованиям модерации). */

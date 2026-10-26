@@ -5,15 +5,15 @@
 ## Запуск локально
 
 ```bash
-node tools/serve.mjs . 5173
+node tools/serve.mjs . 5180
 ```
 
-Открыть http://127.0.0.1:5173/. Вне Яндекс Игр SDK подменяется заглушкой: реклама показывается простым окном.
+Открыть http://127.0.0.1:5180/. Вне Яндекс Игр SDK подменяется заглушкой: реклама показывается простым окном.
 
 ## Тесты
 
 ```bash
-node --test test/logic.test.mjs
+node --test test/logic.test.mjs test/progress.test.mjs
 ```
 
 ## Архив для консоли Яндекс Игр
@@ -28,10 +28,12 @@ tar -a -c -f dist/slova.zip index.html css js data
 
 - `js/logic.js` — чистая логика (слова, уровни, цели), покрыта тестами.
 - `js/sdk.js` — обёртка Yandex Games SDK с заглушкой для локальной проверки.
-- `js/storage.js` — сохранение прогресса в localStorage.
+- `js/progress.js` — чистая логика сохранений: слияние локального и облачного, серия дней, защита рекламы (под тестами).
+- `js/storage.js` — сохранение прогресса в localStorage (облако Яндекса — через `js/sdk.js`).
 - `js/main.js` — интерфейс и ход игры.
-- `data/words.txt` — словарь существительных (14 944 слова, порядок по частотности).
-- `tools/build-dict.mjs` — сборка словаря из `nouns.csv`; `tools/stoplist.txt` — исключённые имена и аббревиатуры.
+- `data/words.txt` — словарь существительных (14 805 слов, порядок по частотности).
+- `tools/build-dict.mjs` — сборка словаря из `nouns.csv`; `tools/stoplist.txt` — исключённые имена, аббревиатуры и грубые слова; `tools/apply-stoplist.mjs` — применить стоп-лист к готовому `words.txt` без `nouns.csv`.
+- `tools/make-store-art.mjs` — иконка, обложка и скриншоты для карточки в `store/` (нужен Chrome); тексты карточки: `store/card-text.md`.
 
 ## Словарь и лицензия данных
 

@@ -9,8 +9,8 @@
 
 ## Разработка
 - Без сборки и зависимостей: чистый HTML и JS-модули. Логика в `js/logic.js` (чистая, под тестами).
-- Тесты: `node --test test/logic.test.mjs` (указывать файл, не папку).
-- Предпросмотр: конфигурация `slova` в `.claude/launch.json` (порт 5173); вне Яндекс Игр SDK заменён заглушкой.
+- Тесты: `node --test test/logic.test.mjs test/progress.test.mjs` (указывать файлы, не папку).
+- Предпросмотр: конфигурация `slova` в `.claude/launch.json` (порт 5180); вне Яндекс Игр SDK заменён заглушкой.
 - Архив для консоли: `tar -a -c -f dist/slova.zip index.html css js data` (папка `dist/` не коммитится).
 - Словарь `data/words.txt` под CC BY-SA 4.0: при изменении сохранять `data/NOTICE.txt` и подпись в игре.
 - В GitHub (`git push`) отправлять только по просьбе пользователя, в терминальной панели.

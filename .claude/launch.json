@@ -4,8 +4,8 @@
     {
       "name": "slova",
       "runtimeExecutable": "node",
-      "runtimeArgs": ["tools/serve.mjs", ".", "5173"],
-      "port": 5173
+      "runtimeArgs": ["tools/serve.mjs", ".", "5180"],
+      "port": 5180
     }
   ]
 }

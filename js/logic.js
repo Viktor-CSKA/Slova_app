@@ -117,3 +117,44 @@ export function createLevelBook(dict, { minSub = 8, baseLimit = Infinity } = {})
     };
   };
 }
+
+/** Хеш строки (FNV-1a): из даты получаем зерно для ежедневного уровня. */
+export function hashString(text) {
+  let h = 2166136261;
+  for (let i = 0; i < text.length; i++) {
+    h ^= text.charCodeAt(i);
+    h = Math.imul(h, 16777619) >>> 0;
+  }
+  return h >>> 0;
+}
+
+export const DAILY_LEN = 7;
+
+/** Сколько слов нужно найти в ежедневном уровне: половина доступных, но от 8 до 15. */
+export function dailyGoalFor(total) {
+  return Math.min(total, Math.max(8, Math.min(15, Math.round(total / 2))));
+}
+
+/**
+ * Ежедневный уровень: по ключу даты («2026-10-27») у всех игроков одно и то же
+ * базовое слово из DAILY_LEN букв, подслов не меньше minSub.
+ */
+export function createDailyPicker(dict, { minSub = 15, baseLimit = Infinity } = {}) {
+  const wordList = [...new Set(dict)];
+  const candidates = shuffled(
+    wordList.slice(0, baseLimit).filter((w) => w.length === DAILY_LEN),
+    makeRng(777),
+  );
+  return function dailyAt(dateKey) {
+    if (candidates.length === 0) return null;
+    const start = Math.floor(makeRng(hashString(dateKey))() * candidates.length);
+    for (let i = 0; i < candidates.length; i++) {
+      const base = candidates[(start + i) % candidates.length];
+      const words = subWords(base, wordList);
+      if (words.length >= minSub) {
+        return { level: 0, daily: true, dateKey, base, words, goal: dailyGoalFor(words.length) };
+      }
+    }
+    return null;
+  };
+}

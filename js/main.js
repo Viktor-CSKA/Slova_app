@@ -1,4 +1,5 @@
-import { MIN_WORD_LEN, createLevelBook, normalize, shuffled } from './logic.js';
+import { MIN_WORD_LEN, createDailyPicker, createLevelBook, normalize, shuffled } from './logic.js';
+import { canShowInterstitial, dateKey, liveStreak, mergeSaves, nextStreak } from './progress.js';
 import * as sdk from './sdk.js';
 import { loadSave, writeSave } from './storage.js';
 
@@ -17,6 +18,9 @@ const ui = {
   modalTitle: $('modalTitle'),
   modalText: $('modalText'),
   nextBtn: $('nextBtn'),
+  dailyBtn: $('dailyBtn'),
+  helpBtn: $('helpBtn'),
+  help: $('help'),
   loading: $('loading'),
   loadingText: $('loadingText'),
 };
@@ -24,8 +28,16 @@ const ui = {
 const WHEEL_RADIUS = 34; // % от размера круга
 const HIT_RADIUS = 9; // % — радиус попадания по букве
 
+const AD_GAP_MS = 90_000; // не чаще одного полноэкранного ролика за 90 с
+const HINT_NUDGE_MS = 20_000; // через сколько без находок подсказка начинает мигать
+const DAILY_REWARD_HINTS = 2;
+const CLOUD_DELAY_MS = 4000;
+
 const game = {
+  mode: 'level', // 'level' или 'daily'
   levelAt: null,
+  dailyAt: null,
+  save: null, // полное сохранение (уровень, ежедневный, серия)
   data: null, // { level, base, words, goal }
   wordSet: new Set(),
   letters: [],
@@ -41,17 +53,58 @@ let dragging = false;
 let dragMoved = false;
 let toastTimer = 0;
 let lastAdded = null;
+let lastInterstitialAt = null;
+let hintTimer = 0;
+let cloudTimer = 0;
 
 // ---------- сохранение ----------
 
+function today() {
+  return dateKey(sdk.now());
+}
+
 function persist() {
-  writeSave({ level: game.data.level, found: [...game.found], hints: game.hints });
+  const save = game.save;
+  if (game.mode === 'daily') {
+    save.daily = { date: game.data.dateKey, found: [...game.found], done: save.daily?.done === true };
+  } else {
+    save.level = game.data.level;
+    save.found = [...game.found];
+  }
+  save.hints = game.hints;
+  commitSave();
+}
+
+/** Сразу в localStorage, в облако с задержкой (у setData есть лимит частоты). */
+function commitSave() {
+  writeSave(game.save);
+  clearTimeout(cloudTimer);
+  cloudTimer = setTimeout(() => sdk.writeCloudSave(game.save), CLOUD_DELAY_MS);
+}
+
+function flushSave() {
+  if (!game.save) return;
+  writeSave(game.save);
+  clearTimeout(cloudTimer);
+  sdk.writeCloudSave(game.save, true);
 }
 
 // ---------- уровень ----------
 
 function startLevel(number, restored = []) {
-  const data = game.levelAt(number);
+  game.mode = 'level';
+  startRound(game.levelAt(number), restored);
+}
+
+function startDaily() {
+  const key = today();
+  const data = game.dailyAt(key);
+  const saved = game.save.daily?.date === key ? game.save.daily.found : [];
+  game.mode = 'daily';
+  startRound(data, saved);
+}
+
+function startRound(data, restored = []) {
   if (!data) {
     showFatal('В словаре не хватает слов для уровня.');
     return;
@@ -64,6 +117,14 @@ function startLevel(number, restored = []) {
   lastAdded = null;
   buildWheel();
   renderAll();
+  armHintNudge();
+}
+
+/** Если игрок долго не находит слов, подсказка начинает мигать. */
+function armHintNudge() {
+  clearTimeout(hintTimer);
+  ui.hintBtn.classList.remove('btn--pulse');
+  hintTimer = setTimeout(() => ui.hintBtn.classList.add('btn--pulse'), HINT_NUDGE_MS);
 }
 
 function buildWheel() {
@@ -88,12 +149,24 @@ function renderAll() {
   renderFound();
   renderCurrent();
   renderHint();
+  renderDailyButton();
 }
 
 function renderHeader() {
-  const { level, goal } = game.data;
-  ui.level.textContent = `Уровень ${level}`;
+  const { level, goal, daily } = game.data;
+  ui.level.textContent = daily ? 'Ежедневный' : `Уровень ${level}`;
   ui.progress.textContent = `${Math.min(game.found.size, goal)} / ${goal}`;
+}
+
+function renderDailyButton() {
+  const doneToday = game.save.daily?.date === today() && game.save.daily.done;
+  const streak = liveStreak(game.save.streak, today());
+  const btn = ui.dailyBtn;
+  btn.classList.toggle('pill--on', game.mode === 'daily');
+  btn.classList.toggle('pill--done', game.mode !== 'daily' && doneToday);
+  if (game.mode === 'daily') btn.textContent = 'К уровням';
+  else if (doneToday) btn.textContent = `✓ Пройден сегодня · серия ${streak}`;
+  else btn.textContent = streak > 0 ? `Ежедневный уровень · серия ${streak}` : 'Ежедневный уровень';
 }
 
 function renderFound() {
@@ -127,15 +200,16 @@ function renderHint() {
   ui.hintSub.textContent = game.hints > 0 ? `осталось ${game.hints}` : '▶ за рекламу';
 }
 
-function toast(text) {
+function toast(text, bad = false) {
   ui.toast.textContent = text;
+  ui.toast.classList.toggle('toast--bad', bad);
   ui.toast.classList.add('toast--show');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => ui.toast.classList.remove('toast--show'), 1300);
 }
 
 function reject(text) {
-  toast(text);
+  toast(text, true);
   ui.current.classList.remove('current--shake');
   void ui.current.offsetWidth; // перезапуск анимации
   ui.current.classList.add('current--shake');
@@ -164,6 +238,7 @@ function hit(event) {
 }
 
 function onDown(event) {
+  if (game.paused && !document.hidden) setPaused(false); // событие фокуса могло не прийти
   if (inputBlocked()) return;
   const i = hit(event);
   if (i < 0) return;
@@ -221,6 +296,7 @@ function addWord(word) {
   persist();
   renderHeader();
   renderFound();
+  armHintNudge();
   if (game.found.size >= game.data.goal) finishLevel();
 }
 
@@ -262,9 +338,10 @@ async function useHint() {
     game.busy = true;
     sdk.gameplayStop();
     const rewarded = await sdk.showRewarded();
+    lastInterstitialAt = Date.now(); // после ролика с наградой полноэкранный тоже придерживаем
     sdk.gameplayStart();
     game.busy = false;
-    if (!rewarded) return toast('Награда не получена');
+    if (!rewarded) return toast('Награда не получена', true);
   }
   revealWord();
   renderHint();
@@ -278,20 +355,112 @@ function revealWord() {
 
 function finishLevel() {
   game.busy = true;
+  clearTimeout(hintTimer);
+  ui.hintBtn.classList.remove('btn--pulse');
   sdk.gameplayStop();
+  if (game.mode === 'daily') return finishDaily();
   ui.modalTitle.textContent = `Уровень ${game.data.level} пройден!`;
   ui.modalText.textContent = `Найдено слов: ${game.found.size}`;
+  ui.nextBtn.textContent = 'Дальше';
+  ui.modal.hidden = false;
+}
+
+function finishDaily() {
+  const save = game.save;
+  const key = game.data.dateKey;
+  if (save.daily?.done && save.daily.date === key) {
+    ui.modalTitle.textContent = 'Ежедневный уровень уже пройден';
+    ui.modalText.textContent = 'Новый будет завтра.';
+  } else {
+    save.streak = nextStreak(save.streak, key);
+    save.daily = { date: key, found: [...game.found], done: true };
+    game.hints += DAILY_REWARD_HINTS;
+    save.hints = game.hints;
+    commitSave();
+    ui.modalTitle.textContent = 'Ежедневный уровень пройден!';
+    ui.modalText.textContent = `Серия: ${save.streak.count} дн. · +${DAILY_REWARD_HINTS} подсказки`;
+  }
+  ui.nextBtn.textContent = 'К уровням';
   ui.modal.hidden = false;
 }
 
 async function nextLevel() {
   ui.modal.hidden = true;
-  await sdk.showInterstitial(); // пауза между уровнями, игрок сам нажал «Дальше»
+  if (game.mode === 'daily') {
+    returnToLevels();
+    return;
+  }
+  // Пауза между уровнями: игрок сам нажал «Дальше», и не чаще одного ролика за AD_GAP_MS.
+  if (canShowInterstitial(Date.now(), lastInterstitialAt, AD_GAP_MS)) {
+    await sdk.showInterstitial();
+    lastInterstitialAt = Date.now();
+  }
   const next = game.data.level + 1;
-  writeSave({ level: next, found: [], hints: game.hints });
+  game.save.level = next;
+  game.save.found = [];
+  commitSave();
   game.busy = false;
   startLevel(next);
   sdk.gameplayStart();
+}
+
+function returnToLevels() {
+  game.busy = false;
+  startLevel(game.save.level, game.save.found);
+  if (game.found.size >= game.data.goal) finishLevel();
+  else sdk.gameplayStart();
+}
+
+function onDailyClick() {
+  if (game.busy || game.paused) return;
+  if (game.mode === 'daily') {
+    persist();
+    sdk.gameplayStop();
+    returnToLevels();
+    return;
+  }
+  const doneToday = game.save.daily?.date === today() && game.save.daily.done;
+  if (doneToday) {
+    const streak = liveStreak(game.save.streak, today());
+    return toast(`Сегодня уже пройдено. Серия: ${streak} дн.`);
+  }
+  persist();
+  sdk.gameplayStop();
+  startDaily();
+  sdk.gameplayStart();
+}
+
+// ---------- справка и пауза ----------
+
+function openHelp() {
+  if (game.busy && ui.help.hidden) return; // не поверх окна уровня или рекламы
+  game.busy = true;
+  sdk.gameplayStop();
+  ui.help.hidden = false;
+}
+
+function closeHelp() {
+  ui.help.hidden = true;
+  game.save.seenHelp = true;
+  commitSave();
+  game.busy = false;
+  sdk.gameplayStart();
+}
+
+/** Игра ушла в фон или потеряла фокус: не принимаем ввод и сообщаем платформе. */
+function setPaused(paused) {
+  if (game.paused === paused) return;
+  game.paused = paused;
+  if (paused) {
+    dragging = false;
+    game.selected = [];
+    if (game.data) renderCurrent();
+    flushSave();
+    sdk.gameplayStop();
+  } else {
+    if (!game.busy) sdk.gameplayStart();
+    if (game.save) renderDailyButton(); // мог смениться день
+  }
 }
 
 // ---------- запуск ----------
@@ -310,14 +479,14 @@ async function loadDictionary() {
 
 async function init() {
   sdk.onPauseResume(
-    () => {
-      game.paused = true;
-    },
-    () => {
-      game.paused = false;
-    },
+    () => setPaused(true),
+    () => setPaused(false),
   );
   await sdk.initSdk();
+  document.addEventListener('visibilitychange', () => setPaused(document.hidden));
+  window.addEventListener('blur', () => setPaused(true));
+  window.addEventListener('focus', () => setPaused(document.hidden));
+  window.addEventListener('pagehide', flushSave);
 
   let dict;
   try {
@@ -329,6 +498,7 @@ async function init() {
   }
   // В словаре сначала идут частотные слова: базовые слова берём только из первых 5000.
   game.levelAt = createLevelBook(dict, { minSub: 8, baseLimit: 5000 });
+  game.dailyAt = createDailyPicker(dict, { minSub: 15, baseLimit: 5000 });
 
   ui.wheel.addEventListener('pointerdown', onDown);
   ui.wheel.addEventListener('pointermove', onMove);
@@ -339,15 +509,22 @@ async function init() {
   $('eraseBtn').addEventListener('click', erase);
   ui.hintBtn.addEventListener('click', useHint);
   ui.nextBtn.addEventListener('click', nextLevel);
+  ui.dailyBtn.addEventListener('click', onDailyClick);
+  ui.helpBtn.addEventListener('click', openHelp);
+  $('helpCloseBtn').addEventListener('click', closeHelp);
   document.addEventListener('keydown', onKey);
 
-  const save = loadSave();
-  game.hints = save.hints;
-  startLevel(save.level, save.found);
+  // Локальное сохранение и облачное объединяем: побеждает тот, где игрок дальше.
+  const cloud = await sdk.loadCloudSave();
+  game.save = cloud ? mergeSaves(loadSave(), cloud) : loadSave();
+  writeSave(game.save);
+  game.hints = game.save.hints;
+  startLevel(game.save.level, game.save.found);
   if (game.data && game.found.size >= game.data.goal) finishLevel();
   ui.loading.hidden = true;
   sdk.loadingReady();
-  if (!game.busy) sdk.gameplayStart();
+  if (!game.save.seenHelp && !game.busy) openHelp();
+  else if (!game.busy) sdk.gameplayStart();
 }
 
 init();

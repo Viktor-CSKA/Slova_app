@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Материалы карточки</title>
+<!-- Рисует иконку и обложку для консоли Яндекс Игр. Открывать с ?kind=icon (512×512) или ?kind=cover (800×470); снимает tools/make-store-art.mjs. -->
+<style>
+  * { box-sizing: border-box; margin: 0; }
+  html, body { background: #1f5c50; overflow: hidden; font-family: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif; }
+  #icon { width: 512px; height: 512px; display: none; }
+  #cover { width: 800px; height: 470px; display: none; position: relative;
+    background: radial-gradient(circle at 78% 50%, #3e9c88 0%, #2f7d6d 45%, #1d564a 100%); color: #fff; }
+  .title { position: absolute; left: 48px; top: 96px; font-size: 76px; font-weight: 900; line-height: 1.02; letter-spacing: -1px; text-shadow: 0 4px 0 rgba(0,0,0,.18); }
+  .sub { position: absolute; left: 50px; top: 262px; font-size: 27px; font-weight: 600; color: #d6ebe5; line-height: 1.3; }
+  .chips { position: absolute; left: 48px; top: 366px; display: flex; gap: 12px; }
+  .chip { padding: 8px 20px; border-radius: 999px; background: #f3ede1; color: #2b2a33; font-weight: 800; font-size: 26px; letter-spacing: 1px; box-shadow: 0 3px 0 rgba(0,0,0,.2); }
+  .chip.dash { background: transparent; border: 3px dashed #bfe3d9; color: #bfe3d9; padding: 5px 24px; }
+  #coverWheel { position: absolute; right: 26px; top: 52px; width: 366px; height: 366px; }
+</style>
+</head>
+<body>
+<svg id="wheelDef" width="0" height="0" style="position:absolute">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3a9783"/><stop offset="1" stop-color="#1f5c50"/>
+    </linearGradient>
+  </defs>
+</svg>
+
+<svg id="icon" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"></svg>
+<div id="cover">
+  <div class="title">Слова<br>из слова</div>
+  <div class="sub">Проведи пальцем по буквам<br>и найди все слова</div>
+  <div class="chips"><span class="chip">ВОЛ</span><span class="chip">ЛОВ</span><span class="chip dash">···</span></div>
+  <svg id="coverWheel" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"></svg>
+</div>
+
+<script>
+  // Круг букв «СЛОВО» с дорожкой по пяти буквам.
+  function wheel(svg, withBackground) {
+    const letters = ['С', 'Л', 'О', 'В', 'О'];
+    const pts = letters.map((_, i) => {
+      const a = -Math.PI / 2 + (i * 2 * Math.PI) / 5;
+      return [256 + 128 * Math.cos(a), 256 + 128 * Math.sin(a)];
+    });
+    let s = '';
+    if (withBackground) s += '<rect width="512" height="512" fill="url(#bg)"/>';
+    s += '<circle cx="256" cy="256" r="214" fill="#f3ede1"/>';
+    s += '<circle cx="256" cy="256" r="214" fill="none" stroke="rgba(0,0,0,.08)" stroke-width="6"/>';
+    s += `<polyline points="${pts.map((p) => p.join(',')).join(' ')}" fill="none" stroke="#2f7d6d" stroke-opacity=".6" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>`;
+    pts.forEach(([x, y], i) => {
+      s += `<circle cx="${x}" cy="${y + 5}" r="58" fill="rgba(0,0,0,.14)"/>`;
+      s += `<circle cx="${x}" cy="${y}" r="58" fill="#2f7d6d"/>`;
+      s += `<text x="${x}" y="${y + 24}" text-anchor="middle" font-size="76" font-weight="900" fill="#fff" font-family="Segoe UI, system-ui, sans-serif">${letters[i]}</text>`;
+    });
+    svg.innerHTML = s;
+  }
+  const kind = new URLSearchParams(location.search).get('kind') ?? 'icon';
+  if (kind === 'cover') {
+    wheel(document.getElementById('coverWheel'), false);
+    document.getElementById('cover').style.display = 'block';
+  } else {
+    wheel(document.getElementById('icon'), true);
+    document.getElementById('icon').style.display = 'block';
+  }
+</script>
+</body>
+</html>

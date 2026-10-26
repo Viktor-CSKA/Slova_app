@@ -15,7 +15,7 @@ const MAX_LEN = 8;
 const lines = readFileSync(source, 'utf8').split(/\r?\n/).slice(1);
 // Имена и аббревиатуры, просочившиеся в источник строчными буквами (список пополняем по ходу игры).
 const stop = new Set(
-  readFileSync(new URL('stoplist.txt', import.meta.url), 'utf8').split(/\r?\n/).filter(Boolean),
+  readFileSync(new URL('stoplist.txt', import.meta.url), 'utf8').split(/\s+/).filter(Boolean),
 );
 const seen = new Set(stop);
 const words = [];

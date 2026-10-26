@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <meta name="mobile-web-app-capable" content="yes">
   <title>Слова из слова</title>
+  <link rel="icon" href="data:,">
   <link rel="stylesheet" href="css/style.css">
   <script src="/sdk.js"></script>
 </head>
@@ -13,6 +14,10 @@
     <header class="top">
       <div class="top__level" id="levelLabel">Уровень 1</div>
       <div class="top__progress" id="progressLabel">0 / 0</div>
+      <div class="top__tools">
+        <button class="pill" id="dailyBtn" type="button">Ежедневный уровень</button>
+        <button class="pill pill--round" id="helpBtn" type="button" aria-label="Как играть">?</button>
+      </div>
     </header>
 
     <main class="board">
@@ -43,7 +48,20 @@
         <h2 id="modalTitle">Уровень пройден!</h2>
         <p id="modalText"></p>
         <button class="btn btn--primary" id="nextBtn" type="button">Дальше</button>
-        <p class="credits">Словарь: github.com/Badestrand/russian-dictionary (OpenRussian, Wiktionary), лицензия CC BY-SA 4.0. Список сокращён и приведён к строчным буквам без «ё».</p>
+        <p class="credits">Словарь: проект russian-dictionary (OpenRussian, Wiktionary), лицензия CC BY-SA 4.0. Список сокращён и приведён к строчным буквам без «ё».</p>
+      </div>
+    </div>
+
+    <div class="modal" id="help" hidden>
+      <div class="modal__card modal__card--left">
+        <h2>Как играть</h2>
+        <ul class="howto">
+          <li>Проведите пальцем по буквам круга, чтобы составить слово из 3 и более букв. Каждую букву можно взять один раз.</li>
+          <li>Найдите нужное число слов, и откроется следующий уровень. Подойдут любые существительные из словаря.</li>
+          <li>Застряли? «Подсказка» откроет слово. Бесплатные подсказки кончились: посмотрите короткое видео, чтобы получить ещё.</li>
+          <li>Каждый день есть особый уровень, один на всех. Проходите его каждый день: серия дней растёт, а за уровень дают 2 подсказки.</li>
+        </ul>
+        <button class="btn btn--primary" id="helpCloseBtn" type="button">Понятно</button>
       </div>
     </div>
 
