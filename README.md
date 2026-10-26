@@ -31,7 +31,7 @@ tar -a -c -f dist/slova.zip index.html css js data
 - `js/progress.js` — чистая логика сохранений: слияние локального и облачного, серия дней, защита рекламы (под тестами).
 - `js/storage.js` — сохранение прогресса в localStorage (облако Яндекса — через `js/sdk.js`).
 - `js/main.js` — интерфейс и ход игры.
-- `data/words.txt` — словарь существительных (14 805 слов, порядок по частотности).
+- `data/words.txt` — словарь существительных (14 735 слов, порядок по частотности).
 - `tools/build-dict.mjs` — сборка словаря из `nouns.csv`; `tools/stoplist.txt` — исключённые имена, аббревиатуры и грубые слова; `tools/apply-stoplist.mjs` — применить стоп-лист к готовому `words.txt` без `nouns.csv`.
 - `tools/make-store-art.mjs` — иконка, обложка и скриншоты для карточки в `store/` (нужен Chrome); тексты карточки: `store/card-text.md`.
 
