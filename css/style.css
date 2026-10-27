@@ -1,30 +1,56 @@
 :root {
-  --bg: #f3ede1;
+  --bg-a: #fcf4e3;
+  --bg-b: #e3f1ea;
+  --blob-1: rgba(98, 196, 170, 0.45);
+  --blob-2: rgba(247, 188, 128, 0.45);
+  --blob-3: rgba(170, 160, 235, 0.32);
+  --glyph: #3f8e7d;
+  --glyph-op: 0.08;
+  --panel: rgba(255, 252, 244, 0.55);
+  --panel-edge: rgba(255, 255, 255, 0.75);
   --card: #fffaf0;
-  --ink: #2b2a33;
-  --muted: #7a7566;
-  --accent: #2f7d6d;
+  --ink: #26323a;
+  --muted: #6f7a7a;
+  --accent: #2f8f7b;
+  --accent-2: #46b79d;
   --accent-ink: #ffffff;
-  --accent-soft: #d6ebe5;
+  --accent-soft: #d3ece4;
   --warn: #c2453a;
   --tile: #ffffff;
-  --wheel: #e7dfcc;
-  --shadow: 0 2px 8px rgba(43, 42, 51, 0.12);
+  --tile-2: #f1ebdc;
+  --wheel: #e8e0cd;
+  --wheel-hi: #f6f1e4;
+  --wheel-ring: rgba(255, 255, 255, 0.9);
+  --shadow: 0 2px 8px rgba(38, 50, 58, 0.14);
+  --shadow-lg: 0 14px 34px rgba(38, 50, 58, 0.18);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #1f2227;
-    --card: #2a2e35;
+    --bg-a: #121c22;
+    --bg-b: #1d1b33;
+    --blob-1: rgba(60, 170, 150, 0.28);
+    --blob-2: rgba(210, 130, 90, 0.2);
+    --blob-3: rgba(130, 110, 220, 0.3);
+    --glyph: #8fd4c3;
+    --glyph-op: 0.06;
+    --panel: rgba(30, 38, 50, 0.55);
+    --panel-edge: rgba(255, 255, 255, 0.08);
+    --card: #262d3a;
     --ink: #f1ede4;
-    --muted: #9aa0a8;
+    --muted: #9ba3ad;
     --accent: #4cb29c;
-    --accent-ink: #10201c;
-    --accent-soft: #28443d;
+    --accent-2: #6fd2bb;
+    --accent-ink: #0d201b;
+    --accent-soft: #274440;
     --warn: #ee7468;
-    --tile: #3a4049;
-    --wheel: #2f343c;
-    --shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    --tile: #3b4352;
+    --tile-2: #2e3542;
+    --wheel: #242b38;
+    --wheel-hi: #313a4a;
+    --wheel-ring: rgba(255, 255, 255, 0.1);
+    --shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+    --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.5);
   }
 }
 
@@ -33,7 +59,7 @@
 html, body {
   height: 100%;
   margin: 0;
-  background: var(--bg);
+  background: linear-gradient(160deg, var(--bg-a), var(--bg-b)) fixed;
   color: var(--ink);
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   overflow: hidden;
@@ -42,13 +68,58 @@ html, body {
   -webkit-user-select: none;
 }
 
+/* Фон: плывущие цветные пятна и россыпь тихих букв. Только оформление, на игру не влияет. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: -25%;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(38% 34% at 22% 24%, var(--blob-1), transparent 70%),
+    radial-gradient(34% 32% at 80% 30%, var(--blob-2), transparent 70%),
+    radial-gradient(40% 36% at 62% 82%, var(--blob-3), transparent 70%);
+  animation: drift 26s ease-in-out infinite alternate;
+}
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: var(--glyph-op);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cg font-family='Georgia,serif' font-weight='700' fill='%233f8e7d'%3E%3Ctext x='18' y='64' font-size='40' transform='rotate(-14 18 64)'%3E%26%231057%3B%3C/text%3E%3Ctext x='128' y='46' font-size='30' transform='rotate(10 128 46)'%3E%26%231051%3B%3C/text%3E%3Ctext x='84' y='128' font-size='46' transform='rotate(-6 84 128)'%3E%26%231054%3B%3C/text%3E%3Ctext x='170' y='150' font-size='34' transform='rotate(16 170 150)'%3E%26%231042%3B%3C/text%3E%3Ctext x='22' y='182' font-size='32' transform='rotate(8 22 182)'%3E%26%231040%3B%3C/text%3E%3Ctext x='132' y='206' font-size='28' transform='rotate(-10 132 206)'%3E%26%231044%3B%3C/text%3E%3C/g%3E%3C/svg%3E");
+  background-size: 220px 220px;
+}
+@media (prefers-color-scheme: dark) {
+  body::after {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cg font-family='Georgia,serif' font-weight='700' fill='%238fd4c3'%3E%3Ctext x='18' y='64' font-size='40' transform='rotate(-14 18 64)'%3E%26%231057%3B%3C/text%3E%3Ctext x='128' y='46' font-size='30' transform='rotate(10 128 46)'%3E%26%231051%3B%3C/text%3E%3Ctext x='84' y='128' font-size='46' transform='rotate(-6 84 128)'%3E%26%231054%3B%3C/text%3E%3Ctext x='170' y='150' font-size='34' transform='rotate(16 170 150)'%3E%26%231042%3B%3C/text%3E%3Ctext x='22' y='182' font-size='32' transform='rotate(8 22 182)'%3E%26%231040%3B%3C/text%3E%3Ctext x='132' y='206' font-size='28' transform='rotate(-10 132 206)'%3E%26%231044%3B%3C/text%3E%3C/g%3E%3C/svg%3E");
+  }
+}
+
 #app {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   height: 100dvh;
   max-width: 520px;
   margin: 0 auto;
   padding: max(12px, env(safe-area-inset-top)) 16px max(12px, env(safe-area-inset-bottom));
+}
+
+/* На широком экране игра лежит на стеклянной панели посреди фона. */
+@media (min-width: 640px) and (min-height: 640px) {
+  #app {
+    height: min(100dvh - 32px, 860px);
+    margin-top: max(16px, calc((100dvh - 860px) / 2));
+    border-radius: 28px;
+    background: var(--panel);
+    border: 1px solid var(--panel-edge);
+    box-shadow: var(--shadow-lg);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+  }
 }
 
 .top {
@@ -60,8 +131,32 @@ html, body {
   font-weight: 700;
   white-space: nowrap;
 }
-.top__level { font-size: 1.25rem; }
-.top__progress { color: var(--accent); font-size: 1.1rem; }
+.top__level { font-size: 1.3rem; letter-spacing: 0.01em; }
+.top__progress {
+  color: var(--accent);
+  font-size: 1rem;
+  padding: 2px 12px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  font-variant-numeric: tabular-nums;
+}
+.top__bar {
+  order: 2;
+  flex: 1 0 100%;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(127, 140, 140, 0.22);
+  overflow: hidden;
+}
+.top__bar i {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  box-shadow: 0 0 10px var(--accent-2);
+  transition: width 0.45s cubic-bezier(0.3, 1.2, 0.5, 1);
+}
 .top__tools { order: 3; flex: 1 0 100%; display: flex; gap: 8px; align-items: center; justify-content: space-between; }
 
 .pill {
@@ -72,13 +167,15 @@ html, body {
   padding: 0 14px;
   border: 2px solid var(--accent);
   border-radius: 999px;
-  background: transparent;
+  background: var(--panel);
   color: var(--accent);
   cursor: pointer;
+  transition: transform 0.12s, background 0.2s;
 }
+.pill:active { transform: scale(0.96); }
 .pill--round { width: 36px; padding: 0; flex: none; }
 .pill--done { background: var(--accent-soft); border-color: transparent; }
-.pill--on { background: var(--accent); color: var(--accent-ink); }
+.pill--on { background: linear-gradient(135deg, var(--accent), var(--accent-2)); border-color: transparent; color: var(--accent-ink); box-shadow: var(--shadow); }
 
 .board {
   position: relative;
@@ -101,25 +198,33 @@ html, body {
   padding: 4px;
 }
 .chip {
-  padding: 6px 12px;
+  padding: 6px 13px;
   border-radius: 999px;
-  background: var(--accent-soft);
-  font-weight: 600;
+  background: linear-gradient(180deg, var(--tile), var(--accent-soft));
+  box-shadow: var(--shadow);
+  font-weight: 700;
   font-size: 1.05rem;
   text-transform: uppercase;
 }
-.chip--new { animation: pop 0.35s ease-out; }
-.chip--hint { background: transparent; border: 2px dashed var(--accent); }
+.chip--new { animation: pop 0.45s ease-out; box-shadow: 0 0 0 3px var(--accent-2), var(--shadow); }
+.chip--hint { background: transparent; box-shadow: none; border: 2px dashed var(--accent); opacity: 0.7; }
 
 .current {
   flex: 0 0 auto;
+  align-self: center;
+  min-width: 3rem;
   min-height: 3rem;
+  padding: 0 22px;
+  border-radius: 999px;
   text-align: center;
   font-size: 2rem;
+  line-height: 3rem;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  transition: background 0.15s, box-shadow 0.15s;
 }
+.current:not(:empty) { background: var(--card); box-shadow: var(--shadow); }
 .current--shake { animation: shake 0.3s linear; color: var(--warn); }
 
 .toast {
@@ -130,16 +235,17 @@ html, body {
   padding: 8px 16px;
   border-radius: 16px;
   background: var(--ink);
-  color: var(--bg);
+  color: var(--bg-a);
   font-size: 1.05rem;
   font-weight: 700;
+  box-shadow: var(--shadow-lg);
   opacity: 0;
   transition: opacity 0.2s;
   pointer-events: none;
   max-width: 92%;
   text-align: center;
 }
-.toast--show { opacity: 0.96; }
+.toast--show { opacity: 0.97; }
 .toast--bad { background: var(--warn); color: #fff; }
 
 .play { flex: 0 0 auto; display: flex; flex-direction: column; gap: 12px; align-items: center; }
@@ -149,34 +255,65 @@ html, body {
   width: min(78vw, 42dvh, 340px);
   aspect-ratio: 1;
   border-radius: 50%;
-  background: var(--wheel);
+  background: radial-gradient(circle at 50% 38%, var(--wheel-hi), var(--wheel) 72%);
+  box-shadow: 0 0 0 3px var(--wheel-ring), inset 0 3px 12px rgba(0, 0, 0, 0.1), 0 12px 30px rgba(38, 50, 58, 0.18);
   touch-action: none;
 }
-.wheel__trail { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+/* Тонкое внутреннее кольцо и «ступица» в центре круга. */
+.wheel::before {
+  content: "";
+  position: absolute;
+  inset: 20%;
+  border-radius: 50%;
+  border: 2px dashed rgba(127, 140, 140, 0.35);
+  pointer-events: none;
+}
+.wheel::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 16%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, var(--accent-2), var(--accent));
+  box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.2), 0 4px 10px rgba(0, 0, 0, 0.2);
+  opacity: 0.85;
+  pointer-events: none;
+}
+.wheel__trail { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
 .wheel__trail polyline {
   fill: none;
   stroke: var(--accent);
-  stroke-width: 2.4;
+  stroke-width: 3.2;
   stroke-linecap: round;
   stroke-linejoin: round;
-  opacity: 0.55;
+  opacity: 0.6;
+  filter: drop-shadow(0 0 2px var(--accent-2));
 }
 .letter {
   position: absolute;
+  z-index: 2;
   width: 17%;
   aspect-ratio: 1;
   transform: translate(-50%, -50%);
   display: grid;
   place-items: center;
   border-radius: 50%;
-  background: var(--tile);
-  box-shadow: var(--shadow);
+  background: linear-gradient(160deg, var(--tile), var(--tile-2));
+  box-shadow: var(--shadow), inset 0 -3px 0 rgba(0, 0, 0, 0.07);
   font-size: clamp(1.2rem, 7vw, 1.9rem);
   font-weight: 800;
   text-transform: uppercase;
   pointer-events: none;
+  transition: background 0.12s, color 0.12s, box-shadow 0.12s;
 }
-.letter--on { background: var(--accent); color: var(--accent-ink); }
+.letter--on {
+  background: linear-gradient(160deg, var(--accent-2), var(--accent));
+  color: var(--accent-ink);
+  box-shadow: 0 0 0 4px rgba(70, 183, 157, 0.35), 0 4px 12px rgba(0, 0, 0, 0.25);
+}
 
 .actions {
   display: flex;
@@ -189,18 +326,19 @@ html, body {
 .btn {
   font: inherit;
   border: 0;
-  border-radius: 14px;
+  border-radius: 16px;
   background: var(--card);
   color: var(--ink);
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow), inset 0 -3px 0 rgba(0, 0, 0, 0.06);
   padding: 12px 16px;
   min-height: 48px;
   font-weight: 700;
   cursor: pointer;
+  transition: transform 0.1s;
 }
-.btn:active { transform: scale(0.97); }
+.btn:active { transform: scale(0.96); }
 .btn--round { width: 48px; padding: 0; border-radius: 50%; font-size: 1.4rem; }
-.btn--primary { background: var(--accent); color: var(--accent-ink); }
+.btn--primary { background: linear-gradient(160deg, var(--accent-2), var(--accent)); color: var(--accent-ink); box-shadow: var(--shadow), inset 0 -3px 0 rgba(0, 0, 0, 0.14); }
 .btn--hint { display: flex; flex-direction: column; align-items: center; line-height: 1.1; padding: 8px 14px; }
 .btn--hint small { font-weight: 500; color: var(--muted); }
 .btn--pulse { animation: pulse 1.4s ease-in-out infinite; outline: 2px solid var(--accent); }
@@ -211,17 +349,21 @@ html, body {
   inset: 0;
   display: grid;
   place-items: center;
-  background: rgba(0, 0, 0, 0.45);
+  background: rgba(10, 18, 24, 0.5);
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
   z-index: 10;
 }
 .modal[hidden] { display: none; }
 .modal__card {
   width: min(86vw, 360px);
-  padding: 24px;
-  border-radius: 20px;
-  background: var(--card);
+  padding: 26px 24px 22px;
+  border-radius: 24px;
+  background: linear-gradient(180deg, var(--card), var(--accent-soft) 220%);
+  border: 1px solid var(--panel-edge);
   text-align: center;
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-lg);
+  animation: rise 0.28s cubic-bezier(0.2, 1.3, 0.4, 1);
 }
 .modal__card--left { text-align: left; max-height: 90dvh; overflow-y: auto; }
 .modal__card--left h2 { text-align: center; }
@@ -254,17 +396,40 @@ html, body {
 .mock-ad__card p { margin: 0; font-size: 1.3rem; font-weight: 700; }
 .mock-ad__card small { color: var(--muted); }
 
+/* Конфетти при прохождении уровня: частицы создаёт js/main.js. */
+.confetti { position: fixed; inset: 0; z-index: 15; pointer-events: none; overflow: hidden; }
+.confetti i {
+  position: absolute;
+  top: -12px;
+  width: 9px;
+  height: 14px;
+  border-radius: 2px;
+  opacity: 0;
+  animation: fall 1.7s ease-in forwards;
+}
+
 @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
 @keyframes pop { 0% { transform: scale(0.6); } 70% { transform: scale(1.12); } 100% { transform: scale(1); } }
+@keyframes rise { 0% { transform: translateY(18px) scale(0.92); opacity: 0; } 100% { transform: none; opacity: 1; } }
+@keyframes drift { 0% { transform: translate3d(-3%, -2%, 0) rotate(0deg); } 100% { transform: translate3d(3%, 3%, 0) rotate(6deg); } }
+@keyframes fall {
+  0% { transform: translate3d(0, 0, 0) rotate(0deg); opacity: 1; }
+  100% { transform: translate3d(var(--dx), 105dvh, 0) rotate(var(--rot)); opacity: 0.9; }
+}
 @keyframes shake {
   0%, 100% { transform: translateX(0); }
   25% { transform: translateX(-8px); }
   75% { transform: translateX(8px); }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  body::before, .confetti i, .modal__card { animation: none; }
+  .confetti { display: none; }
+}
+
 @media (max-height: 560px) {
   .wheel { width: min(60vw, 38dvh); }
-  .current { font-size: 1.5rem; min-height: 2.2rem; }
+  .current { font-size: 1.5rem; min-height: 2.2rem; line-height: 2.2rem; }
 }
 
 /* Горизонтальный экран телефона: поле слева, круг справа. */

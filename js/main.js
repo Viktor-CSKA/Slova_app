@@ -7,6 +7,7 @@ const $ = (id) => document.getElementById(id);
 const ui = {
   level: $('levelLabel'),
   progress: $('progressLabel'),
+  barFill: $('barFill'),
   found: $('found'),
   current: $('current'),
   toast: $('toast'),
@@ -156,6 +157,27 @@ function renderHeader() {
   const { level, goal, daily } = game.data;
   ui.level.textContent = daily ? 'Ежедневный' : `Уровень ${level}`;
   ui.progress.textContent = `${Math.min(game.found.size, goal)} / ${goal}`;
+  ui.barFill.style.width = `${goal > 0 ? Math.min(100, (game.found.size / goal) * 100) : 0}%`;
+}
+
+const CONFETTI_COLORS = ['#46b79d', '#f7bc80', '#aaa0eb', '#f27f73', '#ffd95e'];
+
+// Горсть цветных полосок падает сверху при прохождении уровня.
+function confetti() {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const layer = document.createElement('div');
+  layer.className = 'confetti';
+  for (let i = 0; i < 36; i++) {
+    const piece = document.createElement('i');
+    piece.style.left = `${Math.random() * 100}%`;
+    piece.style.background = CONFETTI_COLORS[i % CONFETTI_COLORS.length];
+    piece.style.animationDelay = `${Math.random() * 0.4}s`;
+    piece.style.setProperty('--dx', `${Math.round((Math.random() - 0.5) * 160)}px`);
+    piece.style.setProperty('--rot', `${Math.round(360 + Math.random() * 540)}deg`);
+    layer.append(piece);
+  }
+  document.body.append(layer);
+  setTimeout(() => layer.remove(), 2400);
 }
 
 function renderDailyButton() {
@@ -363,6 +385,7 @@ function finishLevel() {
   ui.modalText.textContent = `Найдено слов: ${game.found.size}`;
   ui.nextBtn.textContent = 'Дальше';
   ui.modal.hidden = false;
+  confetti();
 }
 
 function finishDaily() {
@@ -382,6 +405,7 @@ function finishDaily() {
   }
   ui.nextBtn.textContent = 'К уровням';
   ui.modal.hidden = false;
+  confetti();
 }
 
 async function nextLevel() {
