@@ -19,7 +19,7 @@ node --test test/logic.test.mjs test/progress.test.mjs
 ## Архив для консоли Яндекс Игр
 
 ```bash
-tar -a -c -f dist/slova.zip index.html css js data
+C:/Windows/System32/tar.exe -a -c -f dist/slova.zip index.html css js data
 ```
 
 `index.html` должен лежать в корне архива, имена файлов без пробелов и кириллицы.

@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Сборка видео</title>
+<!-- Собирает MP4 из кадров store/frames-tmp (список и время кадров в manifest.json). Запускает tools/make-store-video.mjs. -->
+</head>
+<body>
+<canvas id="c" width="1280" height="720"></canvas>
+<script>
+  window.__status = 'loading';
+  window.__result = null;
+  (async () => {
+    const manifest = await (await fetch('/store/frames-tmp/manifest.json')).json();
+    const frames = [];
+    for (const f of manifest.frames) {
+      const blob = await (await fetch('/store/frames-tmp/' + f.file)).blob();
+      frames.push({ t: f.t, img: await createImageBitmap(blob) });
+    }
+    const canvas = document.getElementById('c');
+    const ctx = canvas.getContext('2d');
+    const mime = ['video/mp4;codecs=avc1.42E01E', 'video/mp4;codecs=avc1', 'video/mp4'].find((m) => MediaRecorder.isTypeSupported(m));
+    if (!mime) {
+      window.__status = 'error: MediaRecorder не умеет mp4 в этом Chrome';
+      return;
+    }
+    const stream = canvas.captureStream(30);
+    const recorder = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 3000000 });
+    const chunks = [];
+    recorder.ondataavailable = (e) => e.data.size && chunks.push(e.data);
+    recorder.onstop = async () => {
+      const blob = new Blob(chunks, { type: 'video/mp4' });
+      const bytes = new Uint8Array(await blob.arrayBuffer());
+      let bin = '';
+      for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+      window.__result = btoa(bin);
+      window.__status = 'done ' + bytes.length + ' ' + mime;
+    };
+    ctx.drawImage(frames[0].img, 0, 0, 1280, 720);
+    recorder.start(500);
+    window.__status = 'recording';
+    const t0 = performance.now();
+    const total = manifest.duration;
+    let last = -1;
+    const timer = setInterval(() => {
+      const t = performance.now() - t0;
+      let i = frames.length - 1;
+      while (i > 0 && frames[i].t > t) i--;
+      if (i !== last) {
+        ctx.drawImage(frames[i].img, 0, 0, 1280, 720);
+        last = i;
+      } else {
+        ctx.fillRect(0, 0, 0, 0); // держим поток живым
+      }
+      if (t >= total) {
+        clearInterval(timer);
+        recorder.stop();
+      }
+    }, 20);
+  })().catch((e) => {
+    window.__status = 'error: ' + e;
+  });
+</script>
+</body>
+</html>

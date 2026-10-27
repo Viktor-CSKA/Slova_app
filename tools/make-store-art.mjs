@@ -99,79 +99,84 @@ await shot('icon-512.png', { width: 512, height: 512, scale: 1 });
 await open(`${site}/tools/store-art.html?kind=cover`, { width: 800, height: 470, scale: 1 });
 await shot('cover-800x470.png', { width: 800, height: 470, scale: 1 });
 
-// ---- скриншоты игры (портрет 360×640 при масштабе 2 = 720×1280) ----
-const view = { width: 360, height: 640, scale: 2 };
-const saveInit = (level, streak) => `
-  const d = new Date(Date.now() - 86400000), p = (n) => String(n).padStart(2, '0');
-  const y = d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
-  localStorage.setItem('slova_save_v1', JSON.stringify({ level: ${level}, found: [], hints: 3, daily: null,
-    streak: { count: ${streak}, last: y }, seenHelp: true }))`;
+// ---- скриншоты игры: портрет 360×640 ×2 = 720×1280 (телефон) и 1280×720 (десктоп, обязателен для консоли) ----
+async function gameShots(view, tag) {
+  const saveInit = (level, streak) => `
+    const d = new Date(Date.now() - 86400000), p = (n) => String(n).padStart(2, '0');
+    const y = d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+    localStorage.setItem('slova_save_v1', JSON.stringify({ level: ${level}, found: [], hints: 3, daily: null,
+      streak: { count: ${streak}, last: y }, seenHelp: true }))`;
 
-// Помощники внутри страницы: слова текущего уровня, ввод слова, жест по кругу.
-const helpers = `
-  window.__sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-  window.__words = async (daily) => {
-    const L = await import('/js/logic.js'), P = await import('/js/progress.js');
-    const text = await (await fetch('/data/words.txt')).text();
-    const dict = text.split(/\\n/).map(L.normalize).filter((w) => w.length >= 3);
-    return daily
-      ? L.createDailyPicker(dict, { minSub: 15, baseLimit: 5000 })(P.dateKey(Date.now()))
-      : L.createLevelBook(dict, { minSub: 8, baseLimit: 5000 })(Number(document.getElementById('levelLabel').textContent.replace(/\\D/g, '')));
-  };
-  window.__type = (w) => {
-    for (const ch of w) document.dispatchEvent(new KeyboardEvent('keydown', { key: ch }));
-    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
-  };
-  window.__drag = async (w) => {
-    const els = [...document.querySelectorAll('.letter')], used = new Set(), wheel = document.getElementById('wheel');
-    const fire = (type, el) => {
-      const r = el.getBoundingClientRect();
-      wheel.dispatchEvent(new PointerEvent(type, { bubbles: true, pointerId: 7, clientX: r.x + r.width / 2, clientY: r.y + r.height / 2 }));
+  // Помощники внутри страницы: слова текущего уровня, ввод слова, жест по кругу.
+  const helpers = `
+    window.__sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+    window.__words = async (daily) => {
+      const L = await import('/js/logic.js'), P = await import('/js/progress.js');
+      const text = await (await fetch('/data/words.txt')).text();
+      const dict = text.split(/\\n/).map(L.normalize).filter((w) => w.length >= 3);
+      return daily
+        ? L.createDailyPicker(dict, { minSub: 15, baseLimit: 5000 })(P.dateKey(Date.now()))
+        : L.createLevelBook(dict, { minSub: 8, baseLimit: 5000 })(Number(document.getElementById('levelLabel').textContent.replace(/\\D/g, '')));
     };
-    let first = true;
-    for (const ch of w) {
-      const i = els.findIndex((e, k) => e.textContent === ch && !used.has(k));
-      used.add(i);
-      fire(first ? 'pointerdown' : 'pointermove', els[i]);
-      first = false;
-      await __sleep(40);
-    }
-  };`;
+    window.__type = (w) => {
+      for (const ch of w) document.dispatchEvent(new KeyboardEvent('keydown', { key: ch }));
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+    };
+    window.__drag = async (w) => {
+      const els = [...document.querySelectorAll('.letter')], used = new Set(), wheel = document.getElementById('wheel');
+      const fire = (type, el) => {
+        const r = el.getBoundingClientRect();
+        wheel.dispatchEvent(new PointerEvent(type, { bubbles: true, pointerId: 7, clientX: r.x + r.width / 2, clientY: r.y + r.height / 2 }));
+      };
+      let first = true;
+      for (const ch of w) {
+        const i = els.findIndex((e, k) => e.textContent === ch && !used.has(k));
+        used.add(i);
+        fire(first ? 'pointerdown' : 'pointermove', els[i]);
+        first = false;
+        await __sleep(40);
+      }
+    };`;
 
-// 1. Обычный уровень: часть слов найдена, идёт жест по кругу.
-await open(site + '/', { ...view, init: saveInit(12, 3) });
-await evaluate(helpers);
-let level = await evaluate('__words(false)');
-const rest = level.words.filter((w) => w.length <= 5);
-for (const w of rest.slice(0, 4)) await evaluate(`__type(${JSON.stringify(w)})`);
-await sleep(500);
-const dragWord = rest.find((w) => w.length >= 4 && !rest.slice(0, 4).includes(w)) ?? rest[4];
-await evaluate(`__drag(${JSON.stringify(dragWord)})`);
-await sleep(300);
-await shot('screenshot-1-level.png', view);
+  // 1. Обычный уровень: часть слов найдена, идёт жест по кругу.
+  await open(site + '/', { ...view, init: saveInit(12, 3) });
+  await evaluate(helpers);
+  let level = await evaluate('__words(false)');
+  const rest = level.words.filter((w) => w.length <= 5);
+  const typed = rest.slice(0, Math.max(1, level.goal - 2)); // последнее слово не вводим: его покажем жестом
+  for (const w of typed) await evaluate(`__type(${JSON.stringify(w)})`);
+  await sleep(500);
+  const dragWord = rest.find((w) => w.length >= 4 && !typed.includes(w)) ?? rest.find((w) => !typed.includes(w));
+  await evaluate(`__drag(${JSON.stringify(dragWord)})`);
+  await sleep(300);
+  await shot(`screenshot-1-level${tag}.png`, view);
 
-// 2. Ежедневный уровень (тёмная тема).
-await open(site + '/', { ...view, dark: true, init: saveInit(12, 4) });
-await evaluate(helpers);
-await evaluate(`document.getElementById('dailyBtn').click(); 1`);
-await sleep(300);
-const daily = await evaluate('__words(true)');
-for (const w of daily.words.slice(0, 6)) await evaluate(`__type(${JSON.stringify(w)})`);
-await sleep(600);
-await shot('screenshot-2-daily.png', view);
+  // 2. Ежедневный уровень (тёмная тема).
+  await open(site + '/', { ...view, dark: true, init: saveInit(12, 4) });
+  await evaluate(helpers);
+  await evaluate(`document.getElementById('dailyBtn').click(); 1`);
+  await sleep(300);
+  const daily = await evaluate('__words(true)');
+  for (const w of daily.words.slice(0, 6)) await evaluate(`__type(${JSON.stringify(w)})`);
+  await sleep(600);
+  await shot(`screenshot-2-daily${tag}.png`, view);
 
-// 3. Окно «Уровень пройден».
-await open(site + '/', { ...view, init: saveInit(7, 0) });
-await evaluate(helpers);
-level = await evaluate('__words(false)');
-for (const w of level.words.slice(0, level.goal)) await evaluate(`__type(${JSON.stringify(w)})`);
-await sleep(600);
-await shot('screenshot-3-complete.png', view);
+  // 3. Окно «Уровень пройден».
+  await open(site + '/', { ...view, init: saveInit(7, 0) });
+  await evaluate(helpers);
+  level = await evaluate('__words(false)');
+  for (const w of level.words.slice(0, level.goal)) await evaluate(`__type(${JSON.stringify(w)})`);
+  await sleep(600);
+  await shot(`screenshot-3-complete${tag}.png`, view);
 
-// 4. Окно «Как играть».
-await open(site + '/', { ...view, dark: true, init: saveInit(3, 0).replace('seenHelp: true', 'seenHelp: false') });
-await sleep(500);
-await shot('screenshot-4-help.png', view);
+  // 4. Окно «Как играть».
+  await open(site + '/', { ...view, dark: true, init: saveInit(3, 0).replace('seenHelp: true', 'seenHelp: false') });
+  await sleep(500);
+  await shot(`screenshot-4-help${tag}.png`, view);
+}
+
+await gameShots({ width: 360, height: 640, scale: 2 }, '');
+await gameShots({ width: 1280, height: 720, scale: 1 }, '-desktop');
 
 ws.close();
 chrome.kill();
