@@ -186,6 +186,22 @@ body::after {
   padding-top: 12px;
 }
 
+.extra {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 8px 6px 14px;
+  border-radius: 16px;
+  background: var(--accent-soft);
+  font-size: 0.85rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.extra[hidden] { display: none; }
+.extra .pill { flex: none; }
+
 .found {
   flex: 1 1 auto;
   min-height: 0;
@@ -371,6 +387,9 @@ body::after {
 .howto li + li { margin-top: 8px; }
 .modal__card h2 { margin: 0 0 8px; }
 .modal__card p { margin: 0 0 16px; color: var(--muted); }
+
+.modal__actions { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.modal__actions [hidden] { display: none; }
 
 .modal__card .credits { margin: 16px 0 0; font-size: 0.7rem; line-height: 1.3; }
 

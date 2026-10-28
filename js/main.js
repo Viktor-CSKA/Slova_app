@@ -21,6 +21,9 @@ const ui = {
   modalTitle: $('modalTitle'),
   modalText: $('modalText'),
   nextBtn: $('nextBtn'),
+  moreBtn: $('moreBtn'),
+  extraBar: $('extraBar'),
+  doneBtn: $('doneBtn'),
   dailyBtn: $('dailyBtn'),
   helpBtn: $('helpBtn'),
   soundBtn: $('soundBtn'),
@@ -50,6 +53,7 @@ const game = {
   selected: [],
   found: new Set(),
   hints: 3,
+  extra: false, // цель выполнена, игрок ищет остальные слова
   busy: false, // идёт реклама или окно уровня
   paused: false, // пауза от SDK
 };
@@ -119,6 +123,7 @@ function startRound(data, restored = []) {
   game.letters = shuffled([...data.base], Math.random);
   game.selected = [];
   game.found = new Set(restored.filter((w) => game.wordSet.has(w)));
+  game.extra = game.found.size >= data.goal; // цель уже была выполнена: дальше ищем остальные слова
   lastAdded = null;
   buildWheel();
   renderAll();
@@ -192,8 +197,10 @@ function renderAll() {
 function renderHeader() {
   const { level, goal, daily } = game.data;
   ui.level.textContent = daily ? 'Ежедневный' : `Уровень ${level}`;
-  ui.progress.textContent = `${Math.min(game.found.size, goal)} / ${goal}`;
-  ui.barFill.style.width = `${goal > 0 ? Math.min(100, (game.found.size / goal) * 100) : 0}%`;
+  const total = game.extra ? game.data.words.length : goal;
+  ui.progress.textContent = `${Math.min(game.found.size, total)} / ${total}`;
+  ui.barFill.style.width = `${total > 0 ? Math.min(100, (game.found.size / total) * 100) : 0}%`;
+  ui.extraBar.hidden = !game.extra;
 }
 
 const CONFETTI_COLORS = ['#46b79d', '#f7bc80', '#aaa0eb', '#f27f73', '#ffd95e'];
@@ -356,11 +363,13 @@ function addWord(word) {
   game.found.add(word);
   if (game.found.size < game.data.goal) sfx.good();
   lastAdded = word;
+  const reachedGoal = !game.extra && game.found.size >= game.data.goal;
+  if (reachedGoal) game.extra = true;
   persist();
   renderHeader();
   renderFound();
   armHintNudge();
-  if (game.found.size >= game.data.goal) finishLevel();
+  if (reachedGoal || (game.extra && game.found.size >= game.data.words.length)) finishLevel();
 }
 
 function erase() {
@@ -416,21 +425,23 @@ function revealWord() {
   addWord(rest[0]); // слова идут в порядке частотности: открываем самое употребимое
 }
 
-function finishLevel() {
+function finishLevel(celebrate = true) {
   game.busy = true;
-  sfx.win();
+  if (celebrate) sfx.win();
   clearTimeout(hintTimer);
   ui.hintBtn.classList.remove('btn--pulse');
   sdk.gameplayStop();
-  if (game.mode === 'daily') return finishDaily();
-  ui.modalTitle.textContent = `Уровень ${game.data.level} пройден!`;
-  ui.modalText.textContent = `Найдено слов: ${game.found.size}`;
+  const all = game.found.size >= game.data.words.length;
+  ui.moreBtn.hidden = all;
+  if (game.mode === 'daily') return finishDaily(celebrate);
+  ui.modalTitle.textContent = all ? `Уровень ${game.data.level}: найдены все слова!` : `Уровень ${game.data.level} пройден!`;
+  ui.modalText.textContent = `Найдено слов: ${game.found.size} из ${game.data.words.length}`;
   ui.nextBtn.textContent = 'Дальше';
   ui.modal.hidden = false;
-  confetti();
+  if (celebrate) confetti();
 }
 
-function finishDaily() {
+function finishDaily(celebrate = true) {
   const save = game.save;
   const key = game.data.dateKey;
   if (save.daily?.done && save.daily.date === key) {
@@ -447,7 +458,18 @@ function finishDaily() {
   }
   ui.nextBtn.textContent = 'К уровням';
   ui.modal.hidden = false;
-  confetti();
+  if (celebrate) confetti();
+}
+
+/** «Искать ещё слова»: закрываем окно и играем дальше, пока не найдены все слова уровня. */
+function keepSearching() {
+  ui.modal.hidden = true;
+  game.extra = true;
+  game.busy = false;
+  renderHeader();
+  renderFound();
+  armHintNudge();
+  sdk.gameplayStart();
 }
 
 async function nextLevel() {
@@ -473,7 +495,7 @@ async function nextLevel() {
 function returnToLevels() {
   game.busy = false;
   startLevel(game.save.level, game.save.found);
-  if (game.found.size >= game.data.goal) finishLevel();
+  if (game.found.size >= game.data.goal) finishLevel(false);
   else sdk.gameplayStart();
 }
 
@@ -576,6 +598,10 @@ async function init() {
   $('eraseBtn').addEventListener('click', erase);
   ui.hintBtn.addEventListener('click', useHint);
   ui.nextBtn.addEventListener('click', nextLevel);
+  ui.moreBtn.addEventListener('click', keepSearching);
+  ui.doneBtn.addEventListener('click', () => {
+    if (!inputBlocked()) finishLevel(false);
+  });
   ui.dailyBtn.addEventListener('click', onDailyClick);
   ui.helpBtn.addEventListener('click', openHelp);
   ui.soundBtn.addEventListener('click', toggleSound);
@@ -590,7 +616,7 @@ async function init() {
   writeSave(game.save);
   game.hints = game.save.hints;
   startLevel(game.save.level, game.save.found);
-  if (game.data && game.found.size >= game.data.goal) finishLevel();
+  if (game.data && game.found.size >= game.data.goal) finishLevel(false);
   ui.loading.hidden = true;
   sdk.loadingReady();
   if (!game.save.seenHelp && !game.busy) openHelp();

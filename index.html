@@ -37,6 +37,10 @@
     </header>
 
     <main class="board">
+      <div class="extra" id="extraBar" hidden>
+        <span>Цель выполнена! Ищем остальные слова</span>
+        <button class="pill pill--on" id="doneBtn" type="button">Дальше ›</button>
+      </div>
       <div class="found" id="found" aria-live="polite"></div>
       <div class="current" id="current" aria-live="polite"></div>
       <div class="toast" id="toast" role="status"></div>
@@ -63,7 +67,10 @@
       <div class="modal__card">
         <h2 id="modalTitle">Уровень пройден!</h2>
         <p id="modalText"></p>
-        <button class="btn btn--primary" id="nextBtn" type="button">Дальше</button>
+        <div class="modal__actions">
+          <button class="btn btn--primary" id="nextBtn" type="button">Дальше</button>
+          <button class="btn" id="moreBtn" type="button">Искать ещё слова</button>
+        </div>
         <p class="credits">Словарь: проект russian-dictionary (OpenRussian, Wiktionary), лицензия CC BY-SA 4.0. Список сокращён и приведён к строчным буквам без «ё».</p>
       </div>
     </div>
@@ -73,7 +80,7 @@
         <h2>Как играть</h2>
         <ul class="howto">
           <li>Проведите пальцем по буквам круга, чтобы составить слово из 3 и более букв. Каждую букву можно взять один раз.</li>
-          <li>Найдите нужное число слов, и откроется следующий уровень. Подойдут любые существительные из словаря.</li>
+          <li>Найдите нужное число слов, и откроется следующий уровень. Подойдут любые существительные из словаря. Цель выполнена? Можно искать остальные слова уровня.</li>
           <li>Застряли? «Подсказка» откроет слово. Бесплатные подсказки кончились: посмотрите короткое видео, чтобы получить ещё.</li>
           <li>Каждый день есть особый уровень, один на всех. Проходите его каждый день: серия дней растёт, а за уровень дают 2 подсказки.</li>
         </ul>
