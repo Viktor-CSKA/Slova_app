@@ -1,5 +1,7 @@
 import { MIN_WORD_LEN, createDailyPicker, createLevelBook, normalize, shuffled } from './logic.js';
 import { canShowInterstitial, dateKey, liveStreak, mergeSaves, nextStreak } from './progress.js';
+import { setSoundEnabled, sfx } from './audio.js';
+import { loadPrefs, resolveTheme, savePrefs } from './prefs.js';
 import * as sdk from './sdk.js';
 import { loadSave, writeSave } from './storage.js';
 
@@ -21,6 +23,8 @@ const ui = {
   nextBtn: $('nextBtn'),
   dailyBtn: $('dailyBtn'),
   helpBtn: $('helpBtn'),
+  soundBtn: $('soundBtn'),
+  themeBtn: $('themeBtn'),
   help: $('help'),
   loading: $('loading'),
   loadingText: $('loadingText'),
@@ -145,6 +149,38 @@ function buildWheel() {
   });
 }
 
+const prefs = loadPrefs();
+let lastSelectedCount = 0;
+
+function applySound() {
+  setSoundEnabled(prefs.sound && !game.paused);
+}
+
+function currentTheme() {
+  return resolveTheme(prefs, matchMedia('(prefers-color-scheme: dark)').matches);
+}
+
+function renderPrefs() {
+  document.documentElement.dataset.theme = currentTheme();
+  ui.soundBtn.textContent = prefs.sound ? '🔊' : '🔇';
+  ui.soundBtn.setAttribute('aria-pressed', String(prefs.sound));
+  ui.themeBtn.textContent = currentTheme() === 'dark' ? '☀️' : '🌙';
+  applySound();
+}
+
+function toggleSound() {
+  prefs.sound = !prefs.sound;
+  savePrefs(prefs);
+  renderPrefs();
+  sfx.tick(3);
+}
+
+function toggleTheme() {
+  prefs.theme = currentTheme() === 'dark' ? 'light' : 'dark';
+  savePrefs(prefs);
+  renderPrefs();
+}
+
 function renderAll() {
   renderHeader();
   renderFound();
@@ -210,6 +246,9 @@ function renderFound() {
 }
 
 function renderCurrent() {
+  const count = game.selected.length;
+  if (count > lastSelectedCount) sfx.tick(count);
+  lastSelectedCount = count;
   ui.current.textContent = game.selected.map((i) => game.letters[i]).join('');
   game.points.forEach((p, i) => p.el.classList.toggle('letter--on', game.selected.includes(i)));
   ui.trail.setAttribute(
@@ -231,6 +270,7 @@ function toast(text, bad = false) {
 }
 
 function reject(text) {
+  sfx.bad();
   toast(text, true);
   ui.current.classList.remove('current--shake');
   void ui.current.offsetWidth; // перезапуск анимации
@@ -314,6 +354,7 @@ function submit() {
 
 function addWord(word) {
   game.found.add(word);
+  if (game.found.size < game.data.goal) sfx.good();
   lastAdded = word;
   persist();
   renderHeader();
@@ -377,6 +418,7 @@ function revealWord() {
 
 function finishLevel() {
   game.busy = true;
+  sfx.win();
   clearTimeout(hintTimer);
   ui.hintBtn.classList.remove('btn--pulse');
   sdk.gameplayStop();
@@ -475,6 +517,7 @@ function closeHelp() {
 function setPaused(paused) {
   if (game.paused === paused) return;
   game.paused = paused;
+  applySound();
   if (paused) {
     dragging = false;
     game.selected = [];
@@ -535,6 +578,9 @@ async function init() {
   ui.nextBtn.addEventListener('click', nextLevel);
   ui.dailyBtn.addEventListener('click', onDailyClick);
   ui.helpBtn.addEventListener('click', openHelp);
+  ui.soundBtn.addEventListener('click', toggleSound);
+  ui.themeBtn.addEventListener('click', toggleTheme);
+  renderPrefs();
   $('helpCloseBtn').addEventListener('click', closeHelp);
   document.addEventListener('keydown', onKey);
 

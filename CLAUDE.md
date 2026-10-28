@@ -9,7 +9,7 @@
 
 ## Разработка
 - Без сборки и зависимостей: чистый HTML и JS-модули. Логика в `js/logic.js` (чистая, под тестами).
-- Тесты: `node --test test/logic.test.mjs test/progress.test.mjs` (указывать файлы, не папку).
+- Тесты: `node --test test/logic.test.mjs test/progress.test.mjs test/prefs.test.mjs` (указывать файлы, не папку).
 - Предпросмотр: конфигурация `slova` в `.claude/launch.json` (порт 5180); вне Яндекс Игр SDK заменён заглушкой.
 - Архив для консоли: `C:/Windows/System32/tar.exe -a -c -f dist/slova.zip index.html css js data` (папка `dist/` не коммитится). Важно: в Git Bash `tar` — GNU tar и молча делает обычный tar-файл с именем .zip (консоль отвергает его: «Некорректный zip-архив»), поэтому вызывать `C:/Windows/System32/tar.exe`; проверка: файл начинается с `PK`.
 - Словарь `data/words.txt` под CC BY-SA 4.0: при изменении сохранять `data/NOTICE.txt` и подпись в игре.

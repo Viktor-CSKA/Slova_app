@@ -13,7 +13,7 @@ node tools/serve.mjs . 5180
 ## Тесты
 
 ```bash
-node --test test/logic.test.mjs test/progress.test.mjs
+node --test test/logic.test.mjs test/progress.test.mjs test/prefs.test.mjs
 ```
 
 ## Архив для консоли Яндекс Игр

@@ -25,33 +25,32 @@
   --shadow-lg: 0 14px 34px rgba(38, 50, 58, 0.18);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg-a: #121c22;
-    --bg-b: #1d1b33;
-    --blob-1: rgba(60, 170, 150, 0.28);
-    --blob-2: rgba(210, 130, 90, 0.2);
-    --blob-3: rgba(130, 110, 220, 0.3);
-    --glyph: #8fd4c3;
-    --glyph-op: 0.06;
-    --panel: rgba(30, 38, 50, 0.55);
-    --panel-edge: rgba(255, 255, 255, 0.08);
-    --card: #262d3a;
-    --ink: #f1ede4;
-    --muted: #9ba3ad;
-    --accent: #4cb29c;
-    --accent-2: #6fd2bb;
-    --accent-ink: #0d201b;
-    --accent-soft: #274440;
-    --warn: #ee7468;
-    --tile: #3b4352;
-    --tile-2: #2e3542;
-    --wheel: #242b38;
-    --wheel-hi: #313a4a;
-    --wheel-ring: rgba(255, 255, 255, 0.1);
-    --shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
-    --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.5);
-  }
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg-a: #121c22;
+  --bg-b: #1d1b33;
+  --blob-1: rgba(60, 170, 150, 0.28);
+  --blob-2: rgba(210, 130, 90, 0.2);
+  --blob-3: rgba(130, 110, 220, 0.3);
+  --glyph: #8fd4c3;
+  --glyph-op: 0.06;
+  --panel: rgba(30, 38, 50, 0.55);
+  --panel-edge: rgba(255, 255, 255, 0.08);
+  --card: #262d3a;
+  --ink: #f1ede4;
+  --muted: #9ba3ad;
+  --accent: #4cb29c;
+  --accent-2: #6fd2bb;
+  --accent-ink: #0d201b;
+  --accent-soft: #274440;
+  --warn: #ee7468;
+  --tile: #3b4352;
+  --tile-2: #2e3542;
+  --wheel: #242b38;
+  --wheel-hi: #313a4a;
+  --wheel-ring: rgba(255, 255, 255, 0.1);
+  --shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.5);
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -91,10 +90,8 @@ body::after {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cg font-family='Georgia,serif' font-weight='700' fill='%233f8e7d'%3E%3Ctext x='18' y='64' font-size='40' transform='rotate(-14 18 64)'%3E%26%231057%3B%3C/text%3E%3Ctext x='128' y='46' font-size='30' transform='rotate(10 128 46)'%3E%26%231051%3B%3C/text%3E%3Ctext x='84' y='128' font-size='46' transform='rotate(-6 84 128)'%3E%26%231054%3B%3C/text%3E%3Ctext x='170' y='150' font-size='34' transform='rotate(16 170 150)'%3E%26%231042%3B%3C/text%3E%3Ctext x='22' y='182' font-size='32' transform='rotate(8 22 182)'%3E%26%231040%3B%3C/text%3E%3Ctext x='132' y='206' font-size='28' transform='rotate(-10 132 206)'%3E%26%231044%3B%3C/text%3E%3C/g%3E%3C/svg%3E");
   background-size: 220px 220px;
 }
-@media (prefers-color-scheme: dark) {
-  body::after {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cg font-family='Georgia,serif' font-weight='700' fill='%238fd4c3'%3E%3Ctext x='18' y='64' font-size='40' transform='rotate(-14 18 64)'%3E%26%231057%3B%3C/text%3E%3Ctext x='128' y='46' font-size='30' transform='rotate(10 128 46)'%3E%26%231051%3B%3C/text%3E%3Ctext x='84' y='128' font-size='46' transform='rotate(-6 84 128)'%3E%26%231054%3B%3C/text%3E%3Ctext x='170' y='150' font-size='34' transform='rotate(16 170 150)'%3E%26%231042%3B%3C/text%3E%3Ctext x='22' y='182' font-size='32' transform='rotate(8 22 182)'%3E%26%231040%3B%3C/text%3E%3Ctext x='132' y='206' font-size='28' transform='rotate(-10 132 206)'%3E%26%231044%3B%3C/text%3E%3C/g%3E%3C/svg%3E");
-  }
+:root[data-theme="dark"] body::after {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cg font-family='Georgia,serif' font-weight='700' fill='%238fd4c3'%3E%3Ctext x='18' y='64' font-size='40' transform='rotate(-14 18 64)'%3E%26%231057%3B%3C/text%3E%3Ctext x='128' y='46' font-size='30' transform='rotate(10 128 46)'%3E%26%231051%3B%3C/text%3E%3Ctext x='84' y='128' font-size='46' transform='rotate(-6 84 128)'%3E%26%231054%3B%3C/text%3E%3Ctext x='170' y='150' font-size='34' transform='rotate(16 170 150)'%3E%26%231042%3B%3C/text%3E%3Ctext x='22' y='182' font-size='32' transform='rotate(8 22 182)'%3E%26%231040%3B%3C/text%3E%3Ctext x='132' y='206' font-size='28' transform='rotate(-10 132 206)'%3E%26%231044%3B%3C/text%3E%3C/g%3E%3C/svg%3E");
 }
 
 #app {
@@ -132,6 +129,8 @@ body::after {
   white-space: nowrap;
 }
 .top__level { font-size: 1.3rem; letter-spacing: 0.01em; }
+.top__right { display: flex; align-items: center; gap: 8px; }
+.top__right .pill--round { width: 32px; min-height: 32px; font-size: 0.95rem; line-height: 1; }
 .top__progress {
   color: var(--accent);
   font-size: 1rem;

@@ -7,13 +7,28 @@
   <title>Слова из слова</title>
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="css/style.css">
+  <script>
+    // Тема выставляется до отрисовки, чтобы не мигал светлый фон: выбор игрока или системная.
+    (function () {
+      var theme = null;
+      try { theme = JSON.parse(localStorage.getItem('slova_prefs_v1')).theme; } catch (e) {}
+      if (theme !== 'light' && theme !== 'dark') {
+        theme = window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+      document.documentElement.dataset.theme = theme;
+    })();
+  </script>
   <script src="/sdk.js"></script>
 </head>
 <body>
   <div id="app">
     <header class="top">
       <div class="top__level" id="levelLabel">Уровень 1</div>
-      <div class="top__progress" id="progressLabel">0 / 0</div>
+      <div class="top__right">
+        <div class="top__progress" id="progressLabel">0 / 0</div>
+        <button class="pill pill--round" id="soundBtn" type="button" aria-label="Звук"></button>
+        <button class="pill pill--round" id="themeBtn" type="button" aria-label="Сменить тему"></button>
+      </div>
       <div class="top__bar" aria-hidden="true"><i id="barFill"></i></div>
       <div class="top__tools">
         <button class="pill" id="dailyBtn" type="button">Ежедневный уровень</button>
